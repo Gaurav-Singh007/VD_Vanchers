@@ -87,6 +87,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' })
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -94,20 +95,34 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.name.trim() || !form.phone.trim()) {
+
+    const submittedForm = new FormData(e.currentTarget)
+    const name = String(submittedForm.get('name') ?? '').trim()
+    const phone = String(submittedForm.get('phone') ?? '').trim()
+    const email = String(submittedForm.get('email') ?? '').trim()
+    const message = String(submittedForm.get('message') ?? '').trim()
+
+    if (!name || !phone) {
+      setFormError('Please fill in at least your name and phone number to submit the form.')
+      setFormStatus('error')
+      return
+    }
+    if (phone.replace(/\D/g, '').length < 10) {
+      setFormError('Please enter a valid phone number (at least 10 digits).')
       setFormStatus('error')
       return
     }
 
     setFormStatus('submitting')
+    setFormError('')
     try {
       const { error } = await supabase.from('leads').insert({
-        name: form.name,
-        phone: form.phone,
-        email: form.email || null,
-        message: form.message || null,
+        name,
+        phone,
+        email: email || null,
+        message: message || null,
         source: 'contact-form',
         status: 'new',
         qualified: false,
@@ -125,17 +140,13 @@ export default function App() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({
-            name: form.name,
-            phone: form.phone,
-            email: form.email,
-            message: form.message,
-          }),
+          body: JSON.stringify({ name, phone, email, message }),
         })
       } catch {
         // notification is best-effort
       }
-    } catch {
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Something went wrong. Please try again or call us at +91 93193 07289.')
       setFormStatus('error')
     }
   }
@@ -521,7 +532,7 @@ export default function App() {
               )}
               {formStatus === 'error' && (
                 <div className="form-error">
-                  Please fill in at least your name and phone number to submit the form.
+                  {formError || 'Please fill in at least your name and phone number to submit the form.'}
                 </div>
               )}
               <div className="form-group">
@@ -532,6 +543,7 @@ export default function App() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Enter your full name"
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -543,6 +555,7 @@ export default function App() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="Enter your phone number"
+                  autoComplete="tel"
                   required
                 />
               </div>
@@ -554,6 +567,7 @@ export default function App() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="Enter your email"
+                  autoComplete="email"
                 />
               </div>
               <div className="form-group">
