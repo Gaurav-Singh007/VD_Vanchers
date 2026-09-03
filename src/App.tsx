@@ -538,7 +538,7 @@ export default function App() {
               <div className="form-group">
                 <label htmlFor="name">Full Name *</label>
                 <input
-                  id="name"
+                  name="name"
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -550,7 +550,7 @@ export default function App() {
               <div className="form-group">
                 <label htmlFor="phone">Phone Number *</label>
                 <input
-                  id="phone"
+                  name="phone"
                   type="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -562,7 +562,7 @@ export default function App() {
               <div className="form-group">
                 <label htmlFor="email">Email (Optional)</label>
                 <input
-                  id="email"
+                  name="email"
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -573,7 +573,7 @@ export default function App() {
               <div className="form-group">
                 <label htmlFor="message">Message (Optional)</label>
                 <textarea
-                  id="message"
+                  name="message"
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="Any specific questions or requirements?"
