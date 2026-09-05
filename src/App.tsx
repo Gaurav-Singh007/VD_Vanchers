@@ -1,54 +1,72 @@
-if (!name || !phone) {
-  setFormError('Please fill in at least your name and phone number to submit the form.')
-  setFormStatus('error')
-  return
-}
+<form className="contact-form" onSubmit={handleSubmit}>
+  {formStatus === 'success' && (
+    <div className="form-success">
+      Thank you! Your enquiry has been received. Our team will contact you within 24 hours.
+    </div>
+  )}
+  {formStatus === 'error' && (
+    <div className="form-error">
+      Please fill in at least your name and phone number to submit the form.
+    </div>
+  )}
 
-if (phone.replace(/\D/g, '').length < 10) {
-  setFormError('Please enter a valid phone number (at least 10 digits).')
-  setFormStatus('error')
-  return
-}
+  <div className="form-group">
+    <label htmlFor="contact-name">Full Name *</label>
+    <input
+      id="contact-name"
+      name="name"
+      type="text"
+      autoComplete="name"
+      value={form.name}
+      onChange={(e) => setForm({ ...form, name: e.target.value })}
+      placeholder="Enter your full name"
+      required
+    />
+  </div>
 
-setFormStatus('submitting')
-setFormError('')
+  <div className="form-group">
+    <label htmlFor="contact-phone">Phone Number *</label>
+    <input
+      id="contact-phone"
+      name="phone"
+      type="tel"
+      autoComplete="tel"
+      value={form.phone}
+      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+      placeholder="Enter your phone number"
+      required
+    />
+  </div>
 
-try {
-  // 1. Dynamic data insertion for any public visitor
-  const { data, error } = await supabase.from('leads').insert([{
-    name: name.trim(),
-    phone: phone.trim(),
-    email: email ? email.trim() : null,
-    message: message ? message.trim() : null,
-    source: 'contact-form',
-    status: 'new',
-    qualified: false,
-  }])
+  <div className="form-group">
+    <label htmlFor="contact-email">Email (Optional)</label>
+    <input
+      id="contact-email"
+      name="email"
+      type="email"
+      autoComplete="email"
+      value={form.email}
+      onChange={(e) => setForm({ ...form, email: e.target.value })}
+      placeholder="Enter your email"
+    />
+  </div>
 
-  // Real-time console debugging log
-  console.log("Supabase Insert Result:", { data, error })
+  <div className="form-group">
+    <label htmlFor="contact-message">Message (Optional)</label>
+    <textarea
+      id="contact-message"
+      name="message"
+      value={form.message}
+      onChange={(e) => setForm({ ...form, message: e.target.value })}
+      placeholder="Any specific questions or requirements?"
+    />
+  </div>
 
-  if (error) throw error
-
-  setFormStatus('success')
-  setForm({ name: '', phone: '', email: '', message: '' })
-
-  // Optional Edge Function Notification Call
-  try {
-    await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-lead`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ name, phone, email, message }),
-    })
-  } catch (notifyErr) {
-    console.warn("Notification error:", notifyErr)
-  }
-
-} catch (err: any) {
-  console.error("EXACT PUBLIC FORM ERROR:", err)
-  setFormError(err?.message || 'Something went wrong. Please try again or call us at +91 93193 07289.')
-  setFormStatus('error')
-}
+  <button
+    type="submit"
+    className="form-submit"
+    disabled={formStatus === 'submitting'}
+  >
+    {formStatus === 'submitting' ? 'Submitting...' : 'Submit Enquiry'}
+  </button>
+</form>
